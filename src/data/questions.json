@@ -1,0 +1,74 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is the capital of France?",
+      "options": ["London", "Berlin", "Paris", "Madrid"],
+      "correctAnswer": 2,
+      "difficulty": "easy"
+    },
+    {
+      "id": 2,
+      "question": "Which planet is known as the Red Planet?",
+      "options": ["Venus", "Mars", "Jupiter", "Saturn"],
+      "correctAnswer": 1,
+      "difficulty": "easy"
+    },
+    {
+      "id": 3,
+      "question": "What is the largest mammal in the world?",
+      "options": ["Elephant", "Blue Whale", "Giraffe", "Hippopotamus"],
+      "correctAnswer": 1,
+      "difficulty": "medium"
+    },
+    {
+      "id": 4,
+      "question": "Who painted the Mona Lisa?",
+      "options": ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+      "correctAnswer": 2,
+      "difficulty": "medium"
+    },
+    {
+      "id": 5,
+      "question": "What is the chemical symbol for gold?",
+      "options": ["Go", "Gd", "Au", "Ag"],
+      "correctAnswer": 2,
+      "difficulty": "medium"
+    },
+    {
+      "id": 6,
+      "question": "Which country has the most natural lakes?",
+      "options": ["Canada", "Russia", "USA", "Finland"],
+      "correctAnswer": 0,
+      "difficulty": "hard"
+    },
+    {
+      "id": 7,
+      "question": "What is the smallest bone in the human body?",
+      "options": ["Stapes", "Malleus", "Incus", "Radius"],
+      "correctAnswer": 0,
+      "difficulty": "hard"
+    },
+    {
+      "id": 8,
+      "question": "In which year did World War II end?",
+      "options": ["1944", "1945", "1946", "1947"],
+      "correctAnswer": 1,
+      "difficulty": "medium"
+    },
+    {
+      "id": 9,
+      "question": "What is the hardest natural substance on Earth?",
+      "options": ["Gold", "Iron", "Diamond", "Platinum"],
+      "correctAnswer": 2,
+      "difficulty": "easy"
+    },
+    {
+      "id": 10,
+      "question": "Which programming language is known as the 'language of the web'?",
+      "options": ["Python", "JavaScript", "Java", "C++"],
+      "correctAnswer": 1,
+      "difficulty": "easy"
+    }
+  ]
+}
