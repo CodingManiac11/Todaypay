@@ -1,69 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Question = ({ question, onAnswer, disabled = false }) => {
   const [selectedOption, setSelectedOption] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    // Reset selection when question changes
+    setSelectedOption(null);
+    setIsAnimating(true);
+    const timer = setTimeout(() => setIsAnimating(false), 300);
+    return () => clearTimeout(timer);
+  }, [question.id]);
 
   const handleOptionSelect = (optionIndex) => {
     if (disabled) return;
+    
     setSelectedOption(optionIndex);
-    onAnswer(optionIndex);
+    
+    // Add visual feedback delay
+    setTimeout(() => {
+      onAnswer(optionIndex);
+    }, 150);
   };
 
   const getOptionStyle = (optionIndex) => {
-    let baseStyle = "w-full p-4 text-left rounded-lg border-2 transition-all duration-200 transform hover:scale-102 ";
+    let baseStyle = "w-full p-3 sm:p-4 md:p-6 text-left rounded-xl sm:rounded-2xl border-2 transition-all duration-300 transform relative overflow-hidden option-button ";
     
     if (disabled) {
-      baseStyle += "cursor-not-allowed opacity-60 ";
+      baseStyle += "cursor-not-allowed opacity-70 ";
     } else {
-      baseStyle += "cursor-pointer hover:shadow-lg ";
+      baseStyle += "cursor-pointer hover:scale-102 hover:shadow-xl ";
     }
 
     if (selectedOption === optionIndex) {
-      baseStyle += "border-blue-500 bg-blue-600/20 shadow-lg scale-102 ";
+      baseStyle += "border-blue-400 bg-gradient-to-r from-blue-600/30 to-purple-600/30 shadow-2xl scale-102 animate-pulse-glow ";
     } else {
-      baseStyle += "border-gray-600 bg-white/5 hover:border-gray-500 hover:bg-white/10 ";
+      baseStyle += "border-white/20 glass hover:border-white/40 hover:shadow-lg ";
     }
 
     return baseStyle;
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'easy': return 'text-green-400';
-      case 'medium': return 'text-yellow-400';
-      case 'hard': return 'text-red-400';
-      default: return 'text-gray-400';
-    }
+  const getDifficultyConfig = (difficulty) => {
+    const configs = {
+      easy: { color: 'from-green-400 to-emerald-500', icon: '🌱', label: 'Easy' },
+      medium: { color: 'from-yellow-400 to-orange-500', icon: '⚡', label: 'Medium' },
+      hard: { color: 'from-red-400 to-pink-500', icon: '🔥', label: 'Hard' }
+    };
+    return configs[difficulty] || { color: 'from-gray-400 to-gray-500', icon: '❓', label: 'Unknown' };
   };
 
-  const getDifficultyBadge = (difficulty) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-600/20 text-green-400 border-green-400';
-      case 'medium': return 'bg-yellow-600/20 text-yellow-400 border-yellow-400';
-      case 'hard': return 'bg-red-600/20 text-red-400 border-red-400';
-      default: return 'bg-gray-600/20 text-gray-400 border-gray-400';
-    }
-  };
+  const difficultyConfig = getDifficultyConfig(question.difficulty);
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-2xl">
-        {/* Difficulty Badge */}
-        <div className="flex justify-center mb-6">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getDifficultyBadge(question.difficulty)}`}>
-            {question.difficulty.toUpperCase()}
-          </span>
+    <div className={`w-full max-w-5xl mx-auto px-2 sm:px-4 transition-all duration-500 ${isAnimating ? 'opacity-0 transform translate-y-8' : 'opacity-100 transform translate-y-0'}`}>
+      <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10 shadow-2xl quiz-card">
+        {/* Question Header - Responsive */}
+        <div className="text-center mb-6 sm:mb-8">
+          {/* Difficulty Badge */}
+          <div className="inline-flex items-center mb-4 sm:mb-6">
+            <div className={`px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r ${difficultyConfig.color} shadow-lg`}>
+              <span className="mr-1 sm:mr-2">{difficultyConfig.icon}</span>
+              {difficultyConfig.label}
+            </div>
+          </div>
+
+          {/* Question Text - Responsive */}
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl sm:rounded-2xl blur opacity-25"></div>
+            <div className="relative glass rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold leading-relaxed text-white">
+                {question.question}
+              </h2>
+            </div>
+          </div>
         </div>
 
-        {/* Question */}
-        <div className="text-center mb-8">
-          <h2 className="text-xl md:text-2xl font-bold leading-relaxed">
-            {question.question}
-          </h2>
-        </div>
-
-        {/* Options */}
-        <div className="space-y-3">
+        {/* Options Grid - Responsive */}
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {question.options.map((option, index) => (
             <button
               key={index}
@@ -71,22 +85,61 @@ const Question = ({ question, onAnswer, disabled = false }) => {
               className={getOptionStyle(index)}
               disabled={disabled}
             >
-              <div className="flex items-center">
-                <span className="flex-shrink-0 w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm font-medium mr-4">
+              <div className="flex items-center relative z-10 p-2 sm:p-0">
+                {/* Option Letter - Responsive */}
+                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-sm sm:text-base md:text-lg font-bold mr-3 sm:mr-4 transition-all duration-300 ${
+                  selectedOption === index 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+                    : 'bg-white/20 text-white/80'
+                }`}>
                   {String.fromCharCode(65 + index)}
+                </div>
+                
+                {/* Option Text - Responsive */}
+                <span className="text-sm sm:text-base md:text-lg lg:text-xl font-medium text-white flex-1 text-left">
+                  {option}
                 </span>
-                <span className="text-lg">{option}</span>
+
+                {/* Selection Indicator - Responsive */}
+                {selectedOption === index && (
+                  <div className="flex-shrink-0 ml-2 sm:ml-4">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center animate-bounce-in">
+                      <span className="text-white text-xs sm:text-sm">✓</span>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Hover Effect Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 opacity-0 transition-opacity duration-300 hover:opacity-100 rounded-xl sm:rounded-2xl"></div>
             </button>
           ))}
         </div>
 
-        {/* Selection Indicator */}
+        {/* Selection Status - Responsive */}
+        <div className="text-center">
+          {selectedOption !== null ? (
+            <div className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl sm:rounded-2xl animate-bounce-in">
+              <span className="text-green-400 mr-1 sm:mr-2">✓</span>
+              <span className="text-white font-medium text-sm sm:text-base">
+                Option {String.fromCharCode(65 + selectedOption)} selected
+              </span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-xl sm:rounded-2xl">
+              <span className="text-yellow-400 mr-1 sm:mr-2">⏳</span>
+              <span className="text-white/70 text-sm sm:text-base">
+                Choose your answer above
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Visual Effects - Responsive */}
         {selectedOption !== null && (
-          <div className="mt-6 text-center">
-            <p className="text-blue-300 font-medium">
-              Selected: Option {String.fromCharCode(65 + selectedOption)}
-            </p>
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 w-1 h-1 sm:w-2 sm:h-2 bg-blue-400 rounded-full animate-ping"></div>
+            <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 w-1 h-1 sm:w-2 sm:h-2 bg-purple-400 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
           </div>
         )}
       </div>

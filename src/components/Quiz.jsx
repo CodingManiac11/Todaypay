@@ -9,6 +9,7 @@ const Quiz = () => {
   const navigate = useNavigate();
   const [currentAnswer, setCurrentAnswer] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [showTransition, setShowTransition] = useState(false);
 
   // Redirect to home if no questions loaded
   useEffect(() => {
@@ -25,7 +26,6 @@ const Quiz = () => {
       dispatch({ type: QUIZ_ACTIONS.SET_TIME_REMAINING, payload: state.timeRemaining - 1 });
       
       if (state.timeRemaining <= 1) {
-        // Time's up - auto submit current answer or skip
         handleTimeUp();
       }
     }, 1000);
@@ -42,12 +42,10 @@ const Quiz = () => {
 
   const handleTimeUp = () => {
     if (currentAnswer !== null) {
-      // Submit current answer
       dispatch({ type: QUIZ_ACTIONS.ANSWER_QUESTION, payload: currentAnswer });
     }
     setIsAnswered(true);
     
-    // Auto-advance after a short delay
     setTimeout(() => {
       handleNextQuestion();
     }, 1500);
@@ -62,16 +60,26 @@ const Quiz = () => {
   };
 
   const handleNextQuestion = () => {
-    dispatch({ type: QUIZ_ACTIONS.NEXT_QUESTION });
-    setCurrentAnswer(null);
-    setIsAnswered(false);
+    setShowTransition(true);
+    
+    setTimeout(() => {
+      dispatch({ type: QUIZ_ACTIONS.NEXT_QUESTION });
+      setCurrentAnswer(null);
+      setIsAnswered(false);
+      setShowTransition(false);
+    }, 300);
   };
 
   const handlePreviousQuestion = () => {
     if (state.currentQuestionIndex > 0) {
-      dispatch({ type: QUIZ_ACTIONS.PREVIOUS_QUESTION });
-      setCurrentAnswer(null);
-      setIsAnswered(false);
+      setShowTransition(true);
+      
+      setTimeout(() => {
+        dispatch({ type: QUIZ_ACTIONS.PREVIOUS_QUESTION });
+        setCurrentAnswer(null);
+        setIsAnswered(false);
+        setShowTransition(false);
+      }, 300);
     }
   };
 
@@ -84,10 +92,14 @@ const Quiz = () => {
 
   if (state.isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[600px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-xl">Loading quiz...</p>
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-blue-500/30 rounded-full animate-spin border-t-blue-500 mx-auto mb-6"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-purple-500/30 rounded-full animate-spin border-t-purple-500 mx-auto" style={{animationDirection: 'reverse', animationDuration: '1s'}}></div>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Loading Your Quiz...</h2>
+          <p className="text-white/60">Preparing questions just for you</p>
         </div>
       </div>
     );
@@ -96,14 +108,15 @@ const Quiz = () => {
   if (state.error) {
     return (
       <div className="max-w-2xl mx-auto text-center">
-        <div className="bg-red-600/20 border border-red-600 rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Error Loading Quiz</h2>
-          <p className="text-red-300 mb-4">{state.error}</p>
+        <div className="glass rounded-3xl p-8 border-2 border-red-500/30">
+          <div className="text-6xl mb-4">😞</div>
+          <h2 className="text-3xl font-bold mb-4 text-white">Oops! Something went wrong</h2>
+          <p className="text-red-300 mb-6 text-lg">{state.error}</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-medium transition-colors"
+            className="px-8 py-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 rounded-2xl font-bold text-white transition-all duration-200 transform hover:scale-105"
           >
-            Go Back Home
+            🏠 Go Back Home
           </button>
         </div>
       </div>
@@ -113,14 +126,15 @@ const Quiz = () => {
   if (!currentQuestion) {
     return (
       <div className="max-w-2xl mx-auto text-center">
-        <div className="bg-yellow-600/20 border border-yellow-600 rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">No Questions Available</h2>
-          <p className="text-yellow-300 mb-4">Please try selecting a different difficulty level.</p>
+        <div className="glass rounded-3xl p-8 border-2 border-yellow-500/30">
+          <div className="text-6xl mb-4">🤔</div>
+          <h2 className="text-3xl font-bold mb-4 text-white">No Questions Available</h2>
+          <p className="text-yellow-300 mb-6 text-lg">Try selecting a different difficulty level.</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-yellow-600 hover:bg-yellow-700 px-6 py-2 rounded-lg font-medium transition-colors"
+            className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 rounded-2xl font-bold text-white transition-all duration-200 transform hover:scale-105"
           >
-            Go Back Home
+            🔄 Choose Different Level
           </button>
         </div>
       </div>
@@ -128,7 +142,7 @@ const Quiz = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Progress Bar */}
       <ProgressBar
         current={state.currentQuestionIndex}
@@ -136,57 +150,98 @@ const Quiz = () => {
         timeRemaining={state.timeRemaining}
       />
 
-      {/* Question Component */}
-      <Question
-        question={currentQuestion}
-        onAnswer={handleAnswer}
-        disabled={isAnswered}
-      />
-
-      {/* Navigation Buttons */}
-      <div className="flex justify-between items-center mt-8">
-        <button
-          onClick={handlePreviousQuestion}
-          disabled={state.currentQuestionIndex === 0}
-          className="px-6 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-        >
-          ← Previous
-        </button>
-
-        <div className="text-center">
-          <p className="text-sm text-gray-400 mb-2">
-            Score: {state.score} / {state.userAnswers.length}
-          </p>
-          {isAnswered && (
-            <p className="text-sm text-green-400 font-medium">
-              ✓ Answer submitted
-            </p>
-          )}
-        </div>
-
-        {isLastQuestion ? (
-          <button
-            onClick={handleFinishQuiz}
-            disabled={!isAnswered}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-          >
-            Finish Quiz ✓
-          </button>
-        ) : (
-          <button
-            onClick={handleNextQuestion}
-            disabled={!isAnswered}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-          >
-            Next →
-          </button>
-        )}
+      {/* Question Component with Transition - Responsive */}
+      <div className={`transition-all duration-300 ${showTransition ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
+        <Question
+          question={currentQuestion}
+          onAnswer={handleAnswer}
+          disabled={isAnswered}
+        />
       </div>
 
-      {/* Instructions */}
-      <div className="mt-8 text-center text-sm text-gray-400">
-        {!isAnswered && (
-          <p>Select an answer to continue. Timer will auto-submit when it reaches zero.</p>
+      {/* Navigation and Status - Responsive */}
+      <div className="mt-6 sm:mt-8">
+        <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6">
+          <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
+            {/* Previous Button - Responsive */}
+            <button
+              onClick={handlePreviousQuestion}
+              disabled={state.currentQuestionIndex === 0}
+              className="group px-4 sm:px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 disabled:from-gray-800 disabled:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg sm:rounded-xl font-medium transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 w-full lg:w-auto"
+            >
+              <span className="flex items-center justify-center text-white text-sm sm:text-base">
+                <span className="mr-2 group-hover:animate-bounce-in">←</span>
+                Previous
+              </span>
+            </button>
+
+            {/* Status Display - Responsive */}
+            <div className="text-center px-2 sm:px-6 w-full lg:w-auto">
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 lg:space-x-6 mb-2">
+                <div className="flex items-center">
+                  <span className="text-blue-400 text-xl sm:text-2xl font-bold">{state.score}</span>
+                  <span className="text-white/60 ml-1 text-sm sm:text-base">/ {state.userAnswers.length}</span>
+                </div>
+                <div className="hidden sm:block w-px h-8 bg-white/20"></div>
+                <div className="text-white/80 text-sm sm:text-base">
+                  <span className="text-xs sm:text-sm">Accuracy: </span>
+                  <span className="font-bold">
+                    {state.userAnswers.length > 0 ? Math.round((state.score / state.userAnswers.length) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+              
+              {isAnswered && (
+                <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-lg sm:rounded-xl animate-bounce-in">
+                  <span className="text-green-400 mr-2">✓</span>
+                  <span className="text-white text-xs sm:text-sm font-medium">Answer locked in!</span>
+                </div>
+              )}
+            </div>
+
+            {/* Next/Finish Button - Responsive */}
+            {isLastQuestion ? (
+              <button
+                onClick={handleFinishQuiz}
+                disabled={!isAnswered}
+                className="group px-4 sm:px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:from-gray-800 disabled:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg sm:rounded-xl font-bold transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg w-full lg:w-auto"
+              >
+                <span className="flex items-center justify-center text-white text-sm sm:text-base">
+                  <span className="mr-2">🏁</span>
+                  Finish Quiz
+                  <span className="ml-2 group-hover:animate-bounce-in">✓</span>
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={handleNextQuestion}
+                disabled={!isAnswered}
+                className="group px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-gray-800 disabled:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg sm:rounded-xl font-medium transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 w-full lg:w-auto"
+              >
+                <span className="flex items-center justify-center text-white text-sm sm:text-base">
+                  Next
+                  <span className="ml-2 group-hover:animate-bounce-in">→</span>
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Instructions - Responsive */}
+      <div className="mt-4 sm:mt-6 text-center px-4 sm:px-0">
+        {!isAnswered ? (
+          <div className="glass rounded-lg sm:rounded-xl p-3 sm:p-4">
+            <p className="text-white/70 text-xs sm:text-sm">
+              💡 Select an answer to continue • Timer auto-submits at zero
+            </p>
+          </div>
+        ) : (
+          <div className="glass rounded-lg sm:rounded-xl p-3 sm:p-4">
+            <p className="text-green-400 text-xs sm:text-sm font-medium">
+              🎉 Great! Click Next to continue or wait for auto-advance
+            </p>
+          </div>
         )}
       </div>
     </div>
